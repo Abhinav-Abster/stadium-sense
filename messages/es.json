@@ -1,0 +1,48 @@
+{
+  "header": {
+    "title": "StadiumSense",
+    "subtitle": "Asistente IA para la Copa Mundial FIFA 2026",
+    "language": "Idioma",
+    "highContrast": "Alto Contraste"
+  },
+  "chat": {
+    "title": "Asistente de Navegación y Accesibilidad",
+    "description": "Pregunta sobre la navegación del estadio, entradas accesibles, instalaciones o transporte cercano.",
+    "placeholder": "ej., ¿Dónde está la entrada accesible para sillas de ruedas cerca de la Puerta A?",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "selectStadium": "Seleccionar Estadio",
+    "errorGeneric": "Lo siento, algo salió mal. Por favor, inténtalo de nuevo.",
+    "errorRateLimit": "Demasiadas solicitudes. Por favor, espera un momento.",
+    "errorValidation": "Por favor, ingresa un mensaje válido (máximo 500 caracteres).",
+    "welcome": "¡Hola! Soy tu asistente StadiumSense. Pregúntame sobre la navegación del estadio, entradas accesibles, instalaciones o cómo llegar. ¡Hablo español, inglés, francés y portugués!"
+  },
+  "crowd": {
+    "title": "Estado de Multitudes y Operaciones",
+    "description": "Densidad de multitudes en tiempo real y recomendaciones operativas.",
+    "selectStadium": "Seleccionar Estadio",
+    "refresh": "Actualizar",
+    "summary": "Resumen de Estado",
+    "recommendation": "Recomendación",
+    "alertLow": "Normal",
+    "alertMedium": "Elevado",
+    "alertHigh": "Crítico",
+    "occupancy": "Ocupación",
+    "loading": "Cargando datos de multitudes..."
+  },
+  "transport": {
+    "title": "Consejo de Viaje Sostenible",
+    "description": "Obtén sugerencias de transporte ecológico y mira tus ahorros de CO2.",
+    "originLabel": "¿De dónde vienes?",
+    "originPlaceholder": "ej., Centro de la Ciudad de México, Polanco",
+    "selectStadium": "Seleccionar Estadio",
+    "getTip": "Obtener Consejo",
+    "loading": "Buscando la mejor ruta...",
+    "co2Saved": "CO2 Ahorrado Estimado",
+    "errorGeneric": "Lo siento, no se pudo generar un consejo. Por favor, inténtalo de nuevo."
+  },
+  "footer": {
+    "disclaimer": "StadiumSense utiliza datos simulados con fines de demostración. No está afiliado a la FIFA.",
+    "accessibility": "Construido con cumplimiento WCAG 2.1 AA en mente."
+  }
+}

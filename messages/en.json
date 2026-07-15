@@ -1,0 +1,48 @@
+{
+  "header": {
+    "title": "StadiumSense",
+    "subtitle": "AI-Powered FIFA World Cup 2026 Assistant",
+    "language": "Language",
+    "highContrast": "High Contrast"
+  },
+  "chat": {
+    "title": "Navigation & Accessibility Assistant",
+    "description": "Ask about stadium navigation, accessible entrances, facilities, or nearby transport.",
+    "placeholder": "e.g., Where is the wheelchair-accessible entrance near Gate A?",
+    "send": "Send",
+    "sending": "Sending...",
+    "selectStadium": "Select Stadium",
+    "errorGeneric": "Sorry, something went wrong. Please try again.",
+    "errorRateLimit": "Too many requests. Please wait a moment.",
+    "errorValidation": "Please enter a valid message (max 500 characters).",
+    "welcome": "Hello! I'm your StadiumSense assistant. Ask me about stadium navigation, accessible entrances, facilities, or how to get here. I speak English, Spanish, French, and Portuguese!"
+  },
+  "crowd": {
+    "title": "Crowd & Operations Status",
+    "description": "Real-time crowd density and operational recommendations.",
+    "selectStadium": "Select Stadium",
+    "refresh": "Refresh",
+    "summary": "Status Summary",
+    "recommendation": "Recommendation",
+    "alertLow": "Normal",
+    "alertMedium": "Elevated",
+    "alertHigh": "Critical",
+    "occupancy": "Occupancy",
+    "loading": "Loading crowd data..."
+  },
+  "transport": {
+    "title": "Sustainable Travel Tip",
+    "description": "Get eco-friendly transit suggestions and see your CO2 savings.",
+    "originLabel": "Where are you coming from?",
+    "originPlaceholder": "e.g., Downtown Manhattan, Brooklyn Heights",
+    "selectStadium": "Select Stadium",
+    "getTip": "Get Tip",
+    "loading": "Finding the best route...",
+    "co2Saved": "Estimated CO2 Saved",
+    "errorGeneric": "Sorry, couldn't generate a tip. Please try again."
+  },
+  "footer": {
+    "disclaimer": "StadiumSense uses simulated data for demonstration purposes. Not affiliated with FIFA.",
+    "accessibility": "Built with WCAG 2.1 AA compliance in mind."
+  }
+}

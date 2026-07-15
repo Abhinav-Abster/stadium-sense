@@ -1,0 +1,48 @@
+{
+  "header": {
+    "title": "StadiumSense",
+    "subtitle": "Assistant IA pour la Coupe du Monde FIFA 2026",
+    "language": "Langue",
+    "highContrast": "Contraste Élevé"
+  },
+  "chat": {
+    "title": "Assistant de Navigation et d'Accessibilité",
+    "description": "Posez des questions sur la navigation du stade, les entrées accessibles, les installations ou les transports à proximité.",
+    "placeholder": "ex., Où est l'entrée accessible en fauteuil roulant près de la Porte A?",
+    "send": "Envoyer",
+    "sending": "Envoi en cours...",
+    "selectStadium": "Sélectionner un Stade",
+    "errorGeneric": "Désolé, une erreur s'est produite. Veuillez réessayer.",
+    "errorRateLimit": "Trop de requêtes. Veuillez patienter un moment.",
+    "errorValidation": "Veuillez entrer un message valide (maximum 500 caractères).",
+    "welcome": "Bonjour! Je suis votre assistant StadiumSense. Posez-moi des questions sur la navigation du stade, les entrées accessibles, les installations ou comment y arriver. Je parle français, anglais, espagnol et portugais!"
+  },
+  "crowd": {
+    "title": "État des Foules et Opérations",
+    "description": "Densité des foules en temps réel et recommandations opérationnelles.",
+    "selectStadium": "Sélectionner un Stade",
+    "refresh": "Actualiser",
+    "summary": "Résumé de l'État",
+    "recommendation": "Recommandation",
+    "alertLow": "Normal",
+    "alertMedium": "Élevé",
+    "alertHigh": "Critique",
+    "occupancy": "Occupation",
+    "loading": "Chargement des données..."
+  },
+  "transport": {
+    "title": "Conseil de Voyage Durable",
+    "description": "Obtenez des suggestions de transport écologique et voyez vos économies de CO2.",
+    "originLabel": "D'où venez-vous?",
+    "originPlaceholder": "ex., Centre-ville de Montréal, Vieux-Montréal",
+    "selectStadium": "Sélectionner un Stade",
+    "getTip": "Obtenir un Conseil",
+    "loading": "Recherche du meilleur itinéraire...",
+    "co2Saved": "CO2 Économisé Estimé",
+    "errorGeneric": "Désolé, impossible de générer un conseil. Veuillez réessayer."
+  },
+  "footer": {
+    "disclaimer": "StadiumSense utilise des données simulées à des fins de démonstration. Non affilié à la FIFA.",
+    "accessibility": "Conçu dans le respect de la conformité WCAG 2.1 AA."
+  }
+}
