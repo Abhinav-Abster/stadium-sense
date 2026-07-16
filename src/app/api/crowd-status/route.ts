@@ -1,17 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { CrowdStatusInputSchema } from '@/lib/validation';
 import { runApiGuards } from '@/lib/api-guard';
 import { generateResponse } from '@/lib/gemini';
-import { CrowdStatusResponseSchema, crowdStatusGeminiSchema } from '@/lib/schemas';
-import { getCrowdStatusSystemPrompt, formatZoneDataForPrompt } from '@/lib/prompts';
-import { getStadiumById } from '@/lib/stadium-data';
 import { generateOccupancy } from '@/lib/generate-data';
+import { formatZoneDataForPrompt, getCrowdStatusSystemPrompt } from '@/lib/prompts';
+import { CrowdStatusResponseSchema, crowdStatusGeminiSchema } from '@/lib/schemas';
+import { getStadiumById } from '@/lib/stadium-data';
+import { CrowdStatusInputSchema } from '@/lib/validation';
+import { NextRequest, NextResponse } from 'next/server';
 
 /** Normalised zone shape used by both simulated and fallback paths. */
 interface NormalisedZone {
+  zoneId: string;
   name: string;
   currentOccupancy: number;
   capacity: number;
+}
+
+function createZoneId(name: string, index: number): string {
+  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${index}`;
 }
 
 /**
@@ -43,12 +48,14 @@ export async function POST(request: NextRequest) {
 
   // Normalise zones into a single shape regardless of data source
   const zones: NormalisedZone[] = stadiumData
-    ? stadiumData.zones.map((z) => ({
+    ? stadiumData.zones.map((z, index) => ({
+        zoneId: createZoneId(z.zoneName, index),
         name: z.zoneName,
         currentOccupancy: z.currentOccupancy,
         capacity: z.capacity,
       }))
-    : stadium.zones.map((z) => ({
+    : stadium.zones.map((z, index) => ({
+        zoneId: createZoneId(z.name, index),
         name: z.name,
         currentOccupancy: Math.round(z.capacity * (0.5 + Math.random() * 0.4)),
         capacity: z.capacity,

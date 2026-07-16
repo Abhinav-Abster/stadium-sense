@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
-import { stadiums } from '@/lib/stadium-data';
 import { usePostJson } from '@/hooks/usePostJson';
+import { stadiums } from '@/lib/stadium-data';
+import { MAX_MESSAGE_LENGTH } from '@/lib/validation';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Message {
   id: string;
@@ -172,7 +173,7 @@ export default function ChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            maxLength={500}
+            maxLength={MAX_MESSAGE_LENGTH}
             className="flex-1 resize-none rounded-xl bg-gray-800 border border-gray-700 text-gray-200 px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-24 overflow-y-auto"
           />
           <button
