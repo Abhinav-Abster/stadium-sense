@@ -3,9 +3,12 @@ import { NextRequest } from 'next/server';
 import { generateResponse } from '@/lib/gemini';
 import { apiRateLimiter } from '@/lib/rate-limiter';
 
+jest.mock('@google/genai', () => ({
+  Type: { OBJECT: 'OBJECT', STRING: 'STRING' },
+}));
+
 jest.mock('@/lib/gemini', () => ({
   generateResponse: jest.fn(),
-  crowdStatusResponseSchema: {},
 }));
 
 describe('POST /api/crowd-status', () => {
@@ -17,9 +20,7 @@ describe('POST /api/crowd-status', () => {
   const createRequest = (body: object) => {
     return new NextRequest('http://localhost:3000/api/crowd-status', {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
   };

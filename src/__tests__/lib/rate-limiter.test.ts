@@ -33,12 +33,12 @@ describe('RateLimiter', () => {
 
   it('should reset limits after window expires', async () => {
     const ip = '192.168.1.3';
-    
+
     // Exhaust requests
     for (let i = 0; i < 5; i++) {
       limiter.check(ip);
     }
-    
+
     expect(limiter.check(ip).allowed).toBe(false);
 
     // Wait 2.1 seconds for window to clear

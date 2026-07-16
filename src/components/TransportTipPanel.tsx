@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { stadiums } from '@/lib/stadium-data';
+import { usePostJson } from '@/hooks/usePostJson';
 
 /** Transport tip response from the API. */
 interface TransportTip {
@@ -20,42 +21,18 @@ export default function TransportTipPanel() {
   const t = useTranslations('transport');
   const [origin, setOrigin] = useState('');
   const [stadiumId, setStadiumId] = useState(stadiums[0]?.id ?? '');
-  const [tip, setTip] = useState<TransportTip | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    data: tip,
+    loading,
+    error,
+    execute,
+  } = usePostJson<TransportTip>('/api/transport-tip', t('errorGeneric'));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!origin.trim() || !stadiumId) return;
-
-    setLoading(true);
-    setError(null);
-    setTip(null);
-
-    try {
-      const response = await fetch('/api/transport-tip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin: origin.trim(), stadiumId }),
-      });
-
-      if (response.status === 429) {
-        setError(t('errorGeneric'));
-        return;
-      }
-
-      if (!response.ok) {
-        setError(t('errorGeneric'));
-        return;
-      }
-
-      const data = await response.json();
-      setTip(data);
-    } catch {
-      setError(t('errorGeneric'));
-    } finally {
-      setLoading(false);
-    }
+    await execute({ origin: origin.trim(), stadiumId });
   };
 
   return (
@@ -63,10 +40,7 @@ export default function TransportTipPanel() {
       aria-labelledby="transport-title"
       className="rounded-2xl bg-gray-900/80 backdrop-blur-sm border border-gray-700/50 p-6"
     >
-      <h2
-        id="transport-title"
-        className="text-xl font-bold text-emerald-400 mb-2"
-      >
+      <h2 id="transport-title" className="text-xl font-bold text-emerald-400 mb-2">
         🌱 {t('title')}
       </h2>
       <p className="text-gray-400 text-sm mb-4">{t('description')}</p>
@@ -89,7 +63,7 @@ export default function TransportTipPanel() {
           >
             {stadiums.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} — {s.city}
+                {s.name} \u2014 {s.city}
               </option>
             ))}
           </select>
@@ -151,12 +125,8 @@ export default function TransportTipPanel() {
               🍃
             </span>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wider">
-                {t('co2Saved')}
-              </p>
-              <p className="text-lg font-bold text-emerald-400">
-                {tip.estimatedCO2Saving}
-              </p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider">{t('co2Saved')}</p>
+              <p className="text-lg font-bold text-emerald-400">{tip.estimatedCO2Saving}</p>
             </div>
           </div>
         </div>

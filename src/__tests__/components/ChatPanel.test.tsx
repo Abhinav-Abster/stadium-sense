@@ -1,6 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ChatPanel from '@/components/ChatPanel';
 
+// Polyfill crypto.randomUUID for JSDOM test environment
+if (!globalThis.crypto?.randomUUID) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: {
+      ...globalThis.crypto,
+      randomUUID: () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    },
+  });
+}
+
 // Mock global fetch
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -12,7 +22,7 @@ describe('ChatPanel Component', () => {
 
   it('renders chat header and welcome message', () => {
     render(<ChatPanel />);
-    
+
     expect(screen.getByRole('heading', { name: /chat.title/i })).toBeInTheDocument();
     expect(screen.getByText('chat.welcome')).toBeInTheDocument();
   });
@@ -20,7 +30,8 @@ describe('ChatPanel Component', () => {
   it('allows typing and sending a message', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ reply: 'Here is Gate A.', language: 'en' }),
+      status: 200,
+      json: async () => ({ reply: 'Here is Gate A.', language: 'en', cached: false }),
     });
 
     render(<ChatPanel />);
@@ -42,7 +53,7 @@ describe('ChatPanel Component', () => {
     });
   });
 
-  it('displays rate limit error message when API returns 429', async () => {
+  it('displays error message when API returns 429', async () => {
     mockFetch.mockResolvedValueOnce({
       status: 429,
       ok: false,
@@ -57,7 +68,8 @@ describe('ChatPanel Component', () => {
     fireEvent.click(sendButton);
 
     await waitFor(() => {
-      expect(screen.getByText('chat.errorRateLimit')).toBeInTheDocument();
+      // usePostJson uses the errorMessage param which is t('errorGeneric')
+      expect(screen.getByText('chat.errorGeneric')).toBeInTheDocument();
     });
   });
 });

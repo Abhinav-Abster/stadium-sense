@@ -3,9 +3,12 @@ import { NextRequest } from 'next/server';
 import { generateResponse } from '@/lib/gemini';
 import { apiRateLimiter } from '@/lib/rate-limiter';
 
+jest.mock('@google/genai', () => ({
+  Type: { OBJECT: 'OBJECT', STRING: 'STRING' },
+}));
+
 jest.mock('@/lib/gemini', () => ({
   generateResponse: jest.fn(),
-  transportTipResponseSchema: {},
 }));
 
 describe('POST /api/transport-tip', () => {
@@ -17,9 +20,7 @@ describe('POST /api/transport-tip', () => {
   const createRequest = (body: object) => {
     return new NextRequest('http://localhost:3000/api/transport-tip', {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
   };
@@ -35,7 +36,9 @@ describe('POST /api/transport-tip', () => {
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data.suggestion).toBe('Take NJ Transit Meadowlands Rail from Penn Station directly to the stadium.');
+    expect(data.suggestion).toBe(
+      'Take NJ Transit Meadowlands Rail from Penn Station directly to the stadium.'
+    );
     expect(data.estimatedCO2Saving).toBe('3.4 kg CO2');
   });
 

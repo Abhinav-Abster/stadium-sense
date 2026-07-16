@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ChatInputSchema, validateInput } from '@/lib/validation';
-import { apiRateLimiter, getClientIp } from '@/lib/rate-limiter';
+import { ChatInputSchema } from '@/lib/validation';
+import { runApiGuards } from '@/lib/api-guard';
 import { ResponseCache, chatCache } from '@/lib/cache';
-import { generateResponse, chatResponseSchema } from '@/lib/gemini';
+import { generateResponse } from '@/lib/gemini';
+import { ChatResponseSchema, chatGeminiSchema } from '@/lib/schemas';
 import { getChatSystemPrompt } from '@/lib/prompts';
 import { getStadiumById, getStadiumContextForPrompt } from '@/lib/stadium-data';
-
-/** Maximum allowed request body size in bytes (50KB). */
-const MAX_BODY_SIZE = 50 * 1024;
-
-/** Chat response type from Gemini. */
-interface ChatResponse {
-  reply: string;
-  language: string;
-}
 
 /**
  * POST /api/chat
@@ -25,84 +17,37 @@ interface ChatResponse {
  * payload size checked, no PII persisted.
  */
 export async function POST(request: NextRequest) {
-  // 1. Check payload size (DoS prevention)
-  const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
-    return NextResponse.json(
-      { error: 'Payload too large' },
-      { status: 413 }
-    );
-  }
+  const guard = await runApiGuards(request, ChatInputSchema);
+  if (!guard.ok) return guard.response;
 
-  // 2. Rate limiting
-  const ip = getClientIp(request);
-  const rateLimit = apiRateLimiter.check(ip);
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(rateLimit.resetInSeconds),
-          'X-RateLimit-Remaining': '0',
-        },
-      }
-    );
-  }
+  const { message, stadiumId } = guard.data;
 
-  // 3. Parse and validate input
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: 'Invalid JSON body' },
-      { status: 400 }
-    );
-  }
-
-  const validation = validateInput(ChatInputSchema, body);
-  if (!validation.success) {
-    return NextResponse.json(
-      { error: 'Validation failed', details: validation.errors },
-      { status: 400 }
-    );
-  }
-
-  const { message, stadiumId } = validation.data;
-
-  // 4. Look up stadium data
+  // Look up stadium data
   const stadium = getStadiumById(stadiumId);
   if (!stadium) {
-    return NextResponse.json(
-      { error: 'Stadium not found' },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: 'Stadium not found' }, { status: 404 });
   }
 
-  // 5. Check cache for repeated queries
+  // Check cache for repeated queries
   const cacheKey = ResponseCache.generateKey(`${stadiumId}:${message}`);
   const cached = chatCache.get(cacheKey);
   if (cached) {
     return NextResponse.json(
       { reply: cached, language: 'cached', cached: true },
-      {
-        status: 200,
-        headers: { 'X-RateLimit-Remaining': String(rateLimit.remaining) },
-      }
+      { status: 200, headers: { 'X-RateLimit-Remaining': String(guard.rateLimit.remaining) } }
     );
   }
 
-  // 6. Build prompt and call Gemini (system and user content kept separate)
+  // Build prompt and call Gemini (system and user content kept separate)
   const stadiumContext = getStadiumContextForPrompt(stadium);
   const systemPrompt = getChatSystemPrompt(stadiumContext);
 
-  const result = await generateResponse<ChatResponse>(
+  const result = await generateResponse(
     systemPrompt,
     message,
-    chatResponseSchema
+    chatGeminiSchema,
+    ChatResponseSchema
   );
-
   if (!result) {
     return NextResponse.json(
       { error: 'Failed to generate response. Please try again.' },
@@ -110,15 +55,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 7. Cache the response
+  // Cache and return (no PII logged or persisted)
   chatCache.set(cacheKey, result.reply);
-
-  // 8. Return response (no PII logged or persisted)
   return NextResponse.json(
     { reply: result.reply, language: result.language, cached: false },
-    {
-      status: 200,
-      headers: { 'X-RateLimit-Remaining': String(rateLimit.remaining) },
-    }
+    { status: 200, headers: { 'X-RateLimit-Remaining': String(guard.rateLimit.remaining) } }
   );
 }

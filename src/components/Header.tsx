@@ -24,9 +24,7 @@ export default function Header() {
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               {t('title')}
             </h1>
-            <p className="text-xs text-gray-400 hidden sm:block">
-              {t('subtitle')}
-            </p>
+            <p className="text-xs text-gray-400 hidden sm:block">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -34,9 +32,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <LanguageSelector />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400 hidden sm:inline">
-              {t('highContrast')}
-            </span>
+            <span className="text-xs text-gray-400 hidden sm:inline">{t('highContrast')}</span>
             <ThemeToggle />
           </div>
         </div>

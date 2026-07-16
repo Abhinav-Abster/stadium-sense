@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 const mockGenerateContent = jest.fn();
 
 jest.mock('@google/genai', () => {
@@ -17,7 +19,8 @@ jest.mock('@google/genai', () => {
   };
 });
 
-import { generateResponse, chatResponseSchema } from '@/lib/gemini';
+import { generateResponse } from '@/lib/gemini';
+import { chatGeminiSchema, ChatResponseSchema } from '@/lib/schemas';
 
 describe('Gemini API Wrapper', () => {
   beforeEach(() => {
@@ -31,10 +34,11 @@ describe('Gemini API Wrapper', () => {
 
     const systemPrompt = 'You are a bot';
     const userMessage = 'Hi';
-    const result = await generateResponse<{ reply: string; language: string }>(
+    const result = await generateResponse(
       systemPrompt,
       userMessage,
-      chatResponseSchema
+      chatGeminiSchema,
+      ChatResponseSchema
     );
 
     expect(result).toEqual({ reply: 'Hello World', language: 'en' });
@@ -44,20 +48,33 @@ describe('Gemini API Wrapper', () => {
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: 'application/json',
-        responseSchema: chatResponseSchema,
+        responseSchema: chatGeminiSchema,
       },
     });
   });
 
-  it('should handle API errors and return null gracefully without throwing', async () => {
-    // Suppress console.error in tests
+  it('should reject malformed Gemini output that fails Zod validation', async () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    
+
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify({ wrong_field: 'oops' }),
+    });
+
+    const result = await generateResponse('system', 'user', chatGeminiSchema, ChatResponseSchema);
+
+    expect(result).toBeNull();
+    spy.mockRestore();
+  });
+
+  it('should handle API errors and return null gracefully without throwing', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     mockGenerateContent.mockRejectedValue(new Error('API quota exceeded'));
 
-    const result = await generateResponse('system', 'user');
+    const testSchema = z.object({ reply: z.string() });
+    const result = await generateResponse('system', 'user', {}, testSchema);
     expect(result).toBeNull();
-    
+
     spy.mockRestore();
   });
 });

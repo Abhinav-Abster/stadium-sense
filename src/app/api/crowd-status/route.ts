@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CrowdStatusInputSchema, validateInput } from '@/lib/validation';
-import { apiRateLimiter, getClientIp } from '@/lib/rate-limiter';
-import { generateResponse, crowdStatusResponseSchema } from '@/lib/gemini';
+import { CrowdStatusInputSchema } from '@/lib/validation';
+import { runApiGuards } from '@/lib/api-guard';
+import { generateResponse } from '@/lib/gemini';
+import { CrowdStatusResponseSchema, crowdStatusGeminiSchema } from '@/lib/schemas';
 import { getCrowdStatusSystemPrompt, formatZoneDataForPrompt } from '@/lib/prompts';
 import { getStadiumById } from '@/lib/stadium-data';
 import { generateOccupancy } from '@/lib/generate-data';
 
-/** Maximum allowed request body size in bytes (50KB). */
-const MAX_BODY_SIZE = 50 * 1024;
-
-/** Crowd status response type from Gemini. */
-interface CrowdStatusResponse {
-  summary: string;
-  recommendation: string;
-  alertLevel: 'low' | 'medium' | 'high';
+/** Normalised zone shape used by both simulated and fallback paths. */
+interface NormalisedZone {
+  name: string;
+  currentOccupancy: number;
+  capacity: number;
 }
 
 /**
@@ -26,122 +24,55 @@ interface CrowdStatusResponse {
  * Covers: crowd management, operational intelligence, real-time decision support.
  */
 export async function POST(request: NextRequest) {
-  // 1. Check payload size
-  const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
-    return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
-  }
+  const guard = await runApiGuards(request, CrowdStatusInputSchema);
+  if (!guard.ok) return guard.response;
 
-  // 2. Rate limiting
-  const ip = getClientIp(request);
-  const rateLimit = apiRateLimiter.check(ip);
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please try again later.' },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(rateLimit.resetInSeconds),
-          'X-RateLimit-Remaining': '0',
-        },
-      }
-    );
-  }
+  const { stadiumId } = guard.data;
 
-  // 3. Parse and validate input
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
-
-  const validation = validateInput(CrowdStatusInputSchema, body);
-  if (!validation.success) {
-    return NextResponse.json(
-      { error: 'Validation failed', details: validation.errors },
-      { status: 400 }
-    );
-  }
-
-  const { stadiumId } = validation.data;
-
-  // 4. Look up stadium
+  // Look up stadium
   const stadium = getStadiumById(stadiumId);
   if (!stadium) {
     return NextResponse.json({ error: 'Stadium not found' }, { status: 404 });
   }
 
-  // 5. Generate simulated occupancy data
-  // Uses a random scenario to simulate real-time variation
+  // Generate simulated occupancy — pick a random scenario for realism
   const scenarios = ['normal', 'halftime-rush', 'post-match'] as const;
   const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
   const allData = generateOccupancy(scenario);
   const stadiumData = allData.find((s) => s.stadiumId === stadiumId);
 
-  if (!stadiumData) {
-    // Fallback: generate generic zone data from the stadium's zones
-    const fallbackZones = stadium.zones.map((z) => ({
-      name: z.name,
-      currentOccupancy: Math.round(z.capacity * (0.5 + Math.random() * 0.4)),
-      capacity: z.capacity,
-    }));
-    const zoneText = formatZoneDataForPrompt(fallbackZones);
-    const systemPrompt = getCrowdStatusSystemPrompt();
-    const result = await generateResponse<CrowdStatusResponse>(
-      systemPrompt,
-      `Stadium: ${stadium.name}\nCurrent zone occupancy:\n${zoneText}`,
-      crowdStatusResponseSchema
-    );
+  // Normalise zones into a single shape regardless of data source
+  const zones: NormalisedZone[] = stadiumData
+    ? stadiumData.zones.map((z) => ({
+        name: z.zoneName,
+        currentOccupancy: z.currentOccupancy,
+        capacity: z.capacity,
+      }))
+    : stadium.zones.map((z) => ({
+        name: z.name,
+        currentOccupancy: Math.round(z.capacity * (0.5 + Math.random() * 0.4)),
+        capacity: z.capacity,
+      }));
 
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Failed to generate crowd analysis.' },
-        { status: 502 }
-      );
-    }
+  const activeScenario = stadiumData ? scenario : 'dynamic';
+  const timestamp = stadiumData ? stadiumData.timestamp : new Date().toISOString();
 
-    return NextResponse.json({
-      ...result,
-      zones: fallbackZones,
-      scenario: 'dynamic',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  // 6. Format zone data and call Gemini
-  const zoneText = formatZoneDataForPrompt(
-    stadiumData.zones.map((z) => ({
-      name: z.zoneName,
-      currentOccupancy: z.currentOccupancy,
-      capacity: z.capacity,
-    }))
-  );
-
+  // Single Gemini call site — no duplication
+  const zoneText = formatZoneDataForPrompt(zones);
   const systemPrompt = getCrowdStatusSystemPrompt();
-  const result = await generateResponse<CrowdStatusResponse>(
+  const result = await generateResponse(
     systemPrompt,
-    `Stadium: ${stadium.name}\nScenario: ${scenario}\nCurrent zone occupancy:\n${zoneText}`,
-    crowdStatusResponseSchema
+    `Stadium: ${stadium.name}\nScenario: ${activeScenario}\nCurrent zone occupancy:\n${zoneText}`,
+    crowdStatusGeminiSchema,
+    CrowdStatusResponseSchema
   );
 
   if (!result) {
-    return NextResponse.json(
-      { error: 'Failed to generate crowd analysis.' },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: 'Failed to generate crowd analysis.' }, { status: 502 });
   }
 
   return NextResponse.json(
-    {
-      ...result,
-      zones: stadiumData.zones,
-      scenario,
-      timestamp: stadiumData.timestamp,
-    },
-    {
-      status: 200,
-      headers: { 'X-RateLimit-Remaining': String(rateLimit.remaining) },
-    }
+    { ...result, zones, scenario: activeScenario, timestamp },
+    { status: 200, headers: { 'X-RateLimit-Remaining': String(guard.rateLimit.remaining) } }
   );
 }

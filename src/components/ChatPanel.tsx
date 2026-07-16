@@ -1,14 +1,21 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { stadiums } from '@/lib/stadium-data';
+import { usePostJson } from '@/hooks/usePostJson';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface ChatApiResponse {
+  reply: string;
+  language: string;
+  cached: boolean;
 }
 
 export default function ChatPanel() {
@@ -23,8 +30,8 @@ export default function ChatPanel() {
     },
   ]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const { loading, error, execute } = usePostJson<ChatApiResponse>('/api/chat', t('errorGeneric'));
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -34,57 +41,34 @@ export default function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!input.trim() || loading) return;
     const userMessage = input.trim();
     setInput('');
-    setError(null);
 
     const newUserMessage: Message = {
-      id: Math.random().toString(36).substring(7),
+      id: crypto.randomUUID(),
       role: 'user',
       content: userMessage,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, newUserMessage]);
-    setLoading(true);
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, stadiumId }),
-      });
+    const result = await execute({ message: userMessage, stadiumId });
 
-      if (response.status === 429) {
-        setError(t('errorRateLimit'));
-        return;
-      }
-
-      if (!response.ok) {
-        setError(t('errorGeneric'));
-        return;
-      }
-
-      const data = await response.json();
-      
+    if (result) {
       const newAssistantMessage: Message = {
-        id: Math.random().toString(36).substring(7),
+        id: crypto.randomUUID(),
         role: 'assistant',
-        content: data.reply,
+        content: result.reply,
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, newAssistantMessage]);
-    } catch {
-      setError(t('errorGeneric'));
-    } finally {
-      setLoading(false);
-      // Focus back on input
-      inputRef.current?.focus();
     }
-  };
+
+    inputRef.current?.focus();
+  }, [input, loading, stadiumId, execute]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -106,7 +90,7 @@ export default function ChatPanel() {
           </h2>
           <p className="text-xs text-gray-400">{t('description')}</p>
         </div>
-        
+
         {/* Stadium Selector */}
         <div className="flex items-center gap-2">
           <label htmlFor="chat-stadium-select" className="text-xs text-gray-400 whitespace-nowrap">

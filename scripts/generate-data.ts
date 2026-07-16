@@ -110,7 +110,11 @@ function generateOccupancy(scenario: Scenario, seed: number = 42): StadiumOccupa
           break;
         case 'halftime-rush':
           // Concourse/general areas spike, seating areas drop slightly
-          if (zone.id.includes('concourse') || zone.id.includes('general') || zone.id.includes('club')) {
+          if (
+            zone.id.includes('concourse') ||
+            zone.id.includes('general') ||
+            zone.id.includes('club')
+          ) {
             occupancyRate = 0.8 + rand() * 0.15; // 80-95%
           } else {
             occupancyRate = 0.4 + rand() * 0.2; // 40-60%
@@ -118,7 +122,11 @@ function generateOccupancy(scenario: Scenario, seed: number = 42): StadiumOccupa
           break;
         case 'post-match':
           // Exit-facing zones high, others clearing
-          if (zone.id.includes('south') || zone.id.includes('concourse') || zone.id.includes('sur')) {
+          if (
+            zone.id.includes('south') ||
+            zone.id.includes('concourse') ||
+            zone.id.includes('sur')
+          ) {
             occupancyRate = 0.85 + rand() * 0.12; // 85-97%
           } else {
             occupancyRate = 0.15 + rand() * 0.25; // 15-40%
@@ -158,6 +166,7 @@ if (!validScenarios.includes(scenario)) {
 }
 
 const data = generateOccupancy(scenario);
+// eslint-disable-next-line no-console -- CLI script: stdout output is intentional
 console.log(JSON.stringify(data, null, 2));
 
 // Also export for use in tests and the crowd-status endpoint

@@ -37,7 +37,11 @@ export class RateLimiter {
 
     if (!entry || now >= entry.resetAt) {
       this.limits.set(ip, { count: 1, resetAt: now + this.windowMs });
-      return { allowed: true, remaining: this.maxRequests - 1, resetInSeconds: Math.ceil(this.windowMs / 1000) };
+      return {
+        allowed: true,
+        remaining: this.maxRequests - 1,
+        resetInSeconds: Math.ceil(this.windowMs / 1000),
+      };
     }
 
     if (entry.count >= this.maxRequests) {

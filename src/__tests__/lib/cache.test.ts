@@ -40,12 +40,12 @@ describe('ResponseCache', () => {
 
   it('should clean up expired entries automatically', async () => {
     cache.set(ResponseCache.generateKey('key1'), 'value1');
-    
+
     // Wait for key1 to expire
     await new Promise((resolve) => setTimeout(resolve, 1100));
-    
+
     cache.set(ResponseCache.generateKey('key2'), 'value2');
-    
+
     // key1 should be auto-purged from memory during cleanup
     expect(cache.size).toBe(1);
   });

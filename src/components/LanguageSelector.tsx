@@ -21,9 +21,7 @@ export default function LanguageSelector() {
   const pathname = usePathname();
 
   /** Extract the current locale from the pathname. */
-  const currentLocale = LOCALES.find((l) =>
-    pathname.startsWith(`/${l.code}`)
-  )?.code ?? 'en';
+  const currentLocale = LOCALES.find((l) => pathname.startsWith(`/${l.code}`))?.code ?? 'en';
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLocale = e.target.value;
@@ -35,10 +33,7 @@ export default function LanguageSelector() {
 
   return (
     <div className="flex items-center gap-2">
-      <label
-        htmlFor="language-selector"
-        className="text-sm text-gray-400 hidden sm:inline"
-      >
+      <label htmlFor="language-selector" className="text-sm text-gray-400 hidden sm:inline">
         {t('language')}:
       </label>
       <select

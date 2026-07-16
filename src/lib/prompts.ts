@@ -88,10 +88,7 @@ export function formatZoneDataForPrompt(
  * @param origin - Fan's starting location
  * @param stadiumContext - Pre-formatted stadium data with transport options
  */
-export function formatTransportPromptContent(
-  origin: string,
-  stadiumContext: string
-): string {
+export function formatTransportPromptContent(origin: string, stadiumContext: string): string {
   return `Fan's starting location: ${origin}
 
 Stadium transport options:

@@ -109,14 +109,22 @@ export function generateOccupancy(scenario: Scenario, seed: number = 42): Stadiu
           occupancyRate = 0.5 + rand() * 0.25; // 50-75%
           break;
         case 'halftime-rush':
-          if (zone.id.includes('concourse') || zone.id.includes('general') || zone.id.includes('club')) {
+          if (
+            zone.id.includes('concourse') ||
+            zone.id.includes('general') ||
+            zone.id.includes('club')
+          ) {
             occupancyRate = 0.8 + rand() * 0.15; // 80-95%
           } else {
             occupancyRate = 0.4 + rand() * 0.2; // 40-60%
           }
           break;
         case 'post-match':
-          if (zone.id.includes('south') || zone.id.includes('concourse') || zone.id.includes('sur')) {
+          if (
+            zone.id.includes('south') ||
+            zone.id.includes('concourse') ||
+            zone.id.includes('sur')
+          ) {
             occupancyRate = 0.85 + rand() * 0.12; // 85-97%
           } else {
             occupancyRate = 0.15 + rand() * 0.25; // 15-40%

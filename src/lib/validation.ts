@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 /** Schema for the /api/chat endpoint */
 export const ChatInputSchema = z.object({
-  message: z.string()
+  message: z
+    .string()
     .min(1, 'Message is required')
     .max(500, 'Message must be 500 characters or less'),
   stadiumId: z.string().min(1, 'Stadium ID is required'),
@@ -16,9 +17,7 @@ export const CrowdStatusInputSchema = z.object({
 
 /** Schema for the /api/transport-tip endpoint */
 export const TransportTipInputSchema = z.object({
-  origin: z.string()
-    .min(1, 'Origin is required')
-    .max(200, 'Origin must be 200 characters or less'),
+  origin: z.string().min(1, 'Origin is required').max(200, 'Origin must be 200 characters or less'),
   stadiumId: z.string().min(1, 'Stadium ID is required'),
 });
 
@@ -41,7 +40,7 @@ export type TransportTipInput = z.infer<typeof TransportTipInputSchema>;
  */
 export function validateInput<T>(
   schema: z.ZodSchema<T>,
-  data: unknown,
+  data: unknown
 ): { success: true; data: T } | { success: false; errors: z.ZodIssue[] } {
   const result = schema.safeParse(data);
   if (result.success) return { success: true, data: result.data };

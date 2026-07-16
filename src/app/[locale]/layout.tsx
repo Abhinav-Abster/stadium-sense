@@ -16,10 +16,7 @@ interface LocaleLayoutProps {
   params: Promise<{ locale: string }>;
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: LocaleLayoutProps) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params;
 
   // Validate that the incoming locale is supported
@@ -35,12 +32,16 @@ export default async function LocaleLayout({
       <body className="bg-gray-950 text-gray-100 min-h-screen flex flex-col font-sans antialiased selection:bg-blue-500/30 selection:text-blue-200">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Header />
-          <main className="flex-1 bg-radial from-gray-900 to-gray-950">
-            {children}
-          </main>
-          <footer role="contentinfo" className="border-t border-gray-900 py-6 bg-gray-950 text-center text-xs text-gray-500">
+          <main className="flex-1 bg-radial from-gray-900 to-gray-950">{children}</main>
+          <footer
+            role="contentinfo"
+            className="border-t border-gray-900 py-6 bg-gray-950 text-center text-xs text-gray-500"
+          >
             <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p>StadiumSense uses simulated data for demonstration purposes. Not affiliated with FIFA.</p>
+              <p>
+                StadiumSense uses simulated data for demonstration purposes. Not affiliated with
+                FIFA.
+              </p>
               <p>Built with WCAG 2.1 AA compliance in mind.</p>
             </div>
           </footer>
